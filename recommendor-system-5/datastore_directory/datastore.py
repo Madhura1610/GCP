@@ -25,7 +25,7 @@ def get_user(name):
     print(result)
     return result
 
-def save_preference(name1, Action, Comedy, Horror, Adventure, Romance, Animation):
+def save_preference(name1, Action, Comedy, Drama, Horror, Sci_Fi):
     client = datastore.Client()
     # Entity to update Kind and ID. Replace this values 
     # with ones that you know that exist.
@@ -40,9 +40,9 @@ def save_preference(name1, Action, Comedy, Horror, Adventure, Romance, Animation
     entity.update({
         'action' : Action,
         'comedy' : Comedy,
+        'drama' : Drama,
         'horror' : Horror,
-        'adventure' : Adventure,
-        'romance' : Romance,
-        'animation' : Animation
+        'sci-fi' : Sci_Fi,
+        
         })
     client.put(entity)

@@ -18,7 +18,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from datastore_directory import datastore
 
 df = pd.read_csv("movie_dataset.csv")
-#df = pd.read_csv("gs://movie_dataset4/movie_dataset.csv")
+#df = pd.read_csv("gs://movie_dataset6/movie_dataset.csv")
 features = ['keywords','cast','genres','director']
 def combine_features(row):
     return row['keywords'] +" "+row['cast']+" "+row["genres"]+" "+row["director"]
@@ -141,20 +141,18 @@ def login():
                 preference = datastore.get_user(user)
                 Action = preference['action']
                 Comedy = preference['comedy']
+                Drama = preference['drama']
                 Horror = preference['horror']
-                Adventure = preference['adventure']
-                Romance = preference['romance']
-                Animation = preference['animation']
+                Science = preference['sci-fi']
 
                 genre_rating.append(Action)
                 genre_rating.append(Comedy)
+                genre_rating.append(Drama)
                 genre_rating.append(Horror)
-                genre_rating.append(Adventure)
-                genre_rating.append(Romance)
-                genre_rating.append(Animation)
+                genre_rating.append(Science)
 
                 #appending user preferences with its username and password in DataStore
-                preference = { "Action":Action, "Comedy":Comedy, "Horror":Horror, "Adventure":Adventure, "Romance":Romance,"Animation":Animation}
+                preference = { "Action":Action, "Comedy":Comedy, "Drama":Drama, "Horror":Horror, "Science": Science}
                 temp_genres=[]
                 rec_movies=[]
                 rec_titles=[]
@@ -207,11 +205,14 @@ def landingpage():
 
 @app.route('/rec_list', methods=['POST','GET'])
 def rec_list():
-    apikey='fdbe5b4'
-    #users = ['Ryan']
-    genre = ['Action', 'Comedy', 'Drama', 'Horror', 'Science']
-    genre_rating=[]
-    if request.method == 'POST':
+    if 'username' in session:       
+        
+        #we are creating a session and that session name=username
+        usernamenow = session["username"]
+        apikey='fdbe5b4'
+        #users = ['Ryan']
+        genre = ['Action', 'Comedy', 'Drama', 'Horror', 'Science']
+        genre_rating=[]
         mov1 = int(request.form["mov1"])
         genre_rating.append(mov1)
         mov2 = int(request.form["mov2"])
@@ -222,29 +223,29 @@ def rec_list():
         genre_rating.append(mov4)
         mov5 = int(request.form["mov5"])
         genre_rating.append(mov5)
-
-    temp_genres=[]
-    rec_movies=[]
-    rec_titles=[]
-    rec_genres=[]
-    temp_genres = {genre[i]: genre_rating[i] for i in range(len(genre))}
-    #temp_movies={key: [key, value] for key, value in zip(genre,genre_rating)}
-    rec_genres=dict(reversed(sorted(temp_genres.items(), key=lambda item: item[1])))
-    rec_genres= dict(itertools.islice(rec_genres.items(), 2))  
-    #print(rec_genres.items())
-    #genre1=rec_genres[0]
-    #genre2=rec_genres[1]
-    res = next(iter(rec_genres)) 
-    print(res)
-    genre1=res
-    genre2="Fantasy"
-    rec_titles=rec_pref(genre1)
-    #rec_titles.append(genre2)
-    rec_movies=get_title_poster(apikey,rec_titles)
-    print("-----")
-    print(rec_movies)
-    print("-----")
-    return render_template('rec_list.html',rec_movies=rec_movies)
+        datastore.save_preference(usernamenow,mov1,mov2,mov3,mov4,mov5)
+        temp_genres=[]
+        rec_movies=[]
+        rec_titles=[]
+        rec_genres=[]
+        temp_genres = {genre[i]: genre_rating[i] for i in range(len(genre))}
+        #temp_movies={key: [key, value] for key, value in zip(genre,genre_rating)}
+        rec_genres=dict(reversed(sorted(temp_genres.items(), key=lambda item: item[1])))
+        rec_genres= dict(itertools.islice(rec_genres.items(), 2))  
+        #print(rec_genres.items())
+        #genre1=rec_genres[0]
+        #genre2=rec_genres[1]
+        res = next(iter(rec_genres)) 
+        print(res)
+        genre1=res
+        genre2="Fantasy"
+        rec_titles=rec_pref(genre1)
+        #rec_titles.append(genre2)
+        rec_movies=get_title_poster(apikey,rec_titles)
+        print("-----")
+        print(rec_movies)
+        print("-----")
+        return render_template('rec_list.html',rec_movies=rec_movies)
 
 @app.route('/search', methods=['POST','GET'])
 def search1():
