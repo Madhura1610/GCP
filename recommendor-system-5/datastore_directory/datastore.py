@@ -8,13 +8,41 @@ from flask import current_app
 datastore_client = datastore.Client()
 
 def save_credentials(name, hashpass):
-    
     kind = "users"
-    #name = "username"
-    users_key = datastore_client.key(kind)
+    users_key = datastore_client.key(kind,name)
     users = datastore.Entity(key=users_key)
     users["username"] = name
     users["password"] = hashpass
     datastore_client.put(users)
 
+def get_user(name):
+    client = datastore.Client()
+    # Entity to update Kind and ID. Replace this values 
+    # with ones that you know that exist.
+    entity_kind = 'users'
+    key = client.key(entity_kind, name)
+    result = client.get(key)
+    print(result)
+    return result
 
+def save_preference(name1, Action, Comedy, Horror, Adventure, Romance, Animation):
+    client = datastore.Client()
+    # Entity to update Kind and ID. Replace this values 
+    # with ones that you know that exist.
+    entity_kind = 'users'
+    name = name1
+    key = client.key(entity_kind, name)
+
+    result = client.get(key)
+    print(result)
+
+    entity = client.get(key)
+    entity.update({
+        'action' : Action,
+        'comedy' : Comedy,
+        'horror' : Horror,
+        'adventure' : Adventure,
+        'romance' : Romance,
+        'animation' : Animation
+        })
+    client.put(entity)

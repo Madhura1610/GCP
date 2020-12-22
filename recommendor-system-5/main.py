@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-from flask import Flask, render_template, url_for, request, redirect
+from flask import Flask, render_template, url_for, request, redirect, Blueprint, redirect, session
 from flask_sqlalchemy import SQLAlchemy
 import requests
 import urllib.request
@@ -111,6 +111,7 @@ def get_title_poster(apikey,titles):
     return rec_movies
 
 app = Flask(__name__)
+app.secret_key = 'mysecret'
 
 @app.route('/',methods=['POST','GET'])
 def index():
@@ -118,24 +119,86 @@ def index():
 
 @app.route('/login',methods=['POST','GET'])
 def login():
-    return render_template('login.html')
+    if request.method == 'POST':
+        print("In LOGIN/POST")
+        apikey='fdbe5b4'
+        #users = ['Ryan']
+        genre = ['Action', 'Comedy', 'Drama', 'Horror', 'Science']
+        genre_rating=[]
+        user = request.form['username']
+        print(user)
+        login_user = datastore.get_user(user)
+
+        print(login_user)
+        
+        if login_user:
+            _password = request.form['pass']
+            
+            if check_password_hash(login_user['password'], _password):
+                session['username'] = request.form['username']
+                #after user logs in he is rendered to the recommendation page
+
+                preference = datastore.get_user(user)
+                Action = preference['action']
+                Comedy = preference['comedy']
+                Horror = preference['horror']
+                Adventure = preference['adventure']
+                Romance = preference['romance']
+                Animation = preference['animation']
+
+                genre_rating.append(Action)
+                genre_rating.append(Comedy)
+                genre_rating.append(Horror)
+                genre_rating.append(Adventure)
+                genre_rating.append(Romance)
+                genre_rating.append(Animation)
+
+                #appending user preferences with its username and password in DataStore
+                preference = { "Action":Action, "Comedy":Comedy, "Horror":Horror, "Adventure":Adventure, "Romance":Romance,"Animation":Animation}
+                temp_genres=[]
+                rec_movies=[]
+                rec_titles=[]
+                rec_genres=[]
+                temp_genres = {genre[i]: genre_rating[i] for i in range(len(genre))}
+                #temp_movies={key: [key, value] for key, value in zip(genre,genre_rating)}
+                rec_genres=dict(reversed(sorted(temp_genres.items(), key=lambda item: item[1])))
+                rec_genres= dict(itertools.islice(rec_genres.items(), 2))  
+                #print(rec_genres.items())
+                #genre1=rec_genres[0]
+                #genre2=rec_genres[1]
+                res = next(iter(rec_genres)) 
+                print(res)
+                genre1=res
+                #genre2="Fantasy"
+                rec_titles=rec_pref(genre1)
+                #rec_titles.append(genre2)
+                rec_movies=get_title_poster(apikey,rec_titles)
+                return render_template('rec_list.html',rec_movies=rec_movies)
+
+                # print(Action,Comedy,Horror)
+                # print(Adventure,Romance,Animation)
+                # return render_template('recommend.html')
+        
+        return 'User does not exist! (Check username and password)'
+    
 
 @app.route('/signup',methods=['POST','GET'])
 def signup():
     print("In Signup!")
     if request.method == 'POST':
-        existing_user = None
+        user = request.form['username']
+        existing_user = datastore.get_user(user)
 
         if existing_user is None:
             name = request.form['username'] 
             password = request.form['pass']
             hashpass = generate_password_hash(password)
             datastore.save_credentials(name,hashpass)
-            #session['username'] = request.form['username']
+            session['username'] = request.form['username']
             #after user registers he is taken to the preference page
             return render_template('landingpage.html')
             
-        return 'That username already exists!'
+        return 'Username already exists!'
     return render_template('signup.html')
 
 @app.route('/landingpage',methods=['POST','GET'])
@@ -145,7 +208,7 @@ def landingpage():
 @app.route('/rec_list', methods=['POST','GET'])
 def rec_list():
     apikey='fdbe5b4'
-    users = ['Ryan']
+    #users = ['Ryan']
     genre = ['Action', 'Comedy', 'Drama', 'Horror', 'Science']
     genre_rating=[]
     if request.method == 'POST':
