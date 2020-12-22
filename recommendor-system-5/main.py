@@ -122,11 +122,12 @@ def login():
 
 @app.route('/signup',methods=['POST','GET'])
 def signup():
+    print("In Signup!")
     if request.method == 'POST':
         existing_user = None
 
         if existing_user is None:
-            name = request.form['username']
+            name = request.form['username'] 
             password = request.form['pass']
             hashpass = generate_password_hash(password)
             datastore.save_credentials(name,hashpass)

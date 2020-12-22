@@ -34,7 +34,7 @@
                 <p>Have Account? <a href="/login">Login</a></p>
             </div>
             <div class="box">
-                <form class="form" action="/landingpage"  method="POST">
+                <form class="form" action="{{ url_for('signup') }}"  method=POST>
                     <input type="text" class="fullname" 
                            placeholder="Full Name" required>
                     <input type="email" class="email" placeholder="someone@abc.com" required>
